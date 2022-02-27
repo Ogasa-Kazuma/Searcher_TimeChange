@@ -40,11 +40,13 @@ def main():
         print(pollution_i)
 
 
+
+
     print(pollutionFileReader.Read("PollutionFiles/0.pkl"))
 
     AnimatePollutionTimeChange(pollution, time_start = 0, time_last = 50, step = 1)
 
-    
+
 
 
 
