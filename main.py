@@ -1,5 +1,6 @@
 
 import importlib
+import matplotlib.pyplot as plt
 import PointClass
 importlib.reload(PointClass)
 from PointClass import Point
@@ -10,13 +11,18 @@ import Pollution
 importlib.reload(Pollution)
 from Pollution import Pollution
 
-
-
-
-
-
-
 import Pickle_Reader
+
+
+def AnimatePollutionTimeChange(pollution, time_start, time_last, step):
+#pollutionが実装の詳細（View）を隠してるおかげでカプセル化が保たれてる
+    for t_i in range(time_start, time_last, step):
+        fig = plt.figure()
+        graph = fig.add_subplot(111)
+        print(t_i)
+        pollution.View(graph, time = t_i)
+
+
 
 
 def main():
@@ -34,7 +40,12 @@ def main():
         print(pollution_i)
 
 
+    print(pollutionFileReader.Read("PollutionFiles/0.pkl"))
+
+    AnimatePollutionTimeChange(pollution, time_start = 0, time_last = 50, step = 1)
+
     
+
 
 
 

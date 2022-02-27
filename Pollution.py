@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import glob
+
 import pandas as pd
 import math
 import re
+import copy
 import importlib
 from PointClass import Point
 
@@ -13,6 +15,51 @@ class Pollution:
         self.__pollutionFileDirectory = pollutionFileDirectory
         self.__format = format
         self.__fileReader = fileReader
+
+
+    def View(self, graph_object, time, cmap = 'binary', alpha = 0.3):
+        #フォーマットにカンマが含まれているかどうかをコンストラクタで確認
+        path = self.__pollutionFileDirectory + str(time)  + self.__format
+        pollutionLog = self.__fileReader.Read(path)
+
+        new_x = list()
+        new_y = list()
+
+        xlim = int(pollutionLog["x"][0])
+        ylim = int(pollutionLog["y"][0])
+
+        for x_i in range(0, xlim, 1):
+            for y_i in range(0, ylim, 1):
+
+                new_x.append(x_i)
+                new_y.append(y_i)
+
+
+
+
+        plns = copy.deepcopy(pollutionLog["pollutions"])
+        plns = plns.values.tolist()
+        maxPln = max(plns)
+        for i in range(len(plns)):
+            plns[i] = plns[i] / maxPln
+
+        graph_object.scatter(new_x, new_y, c = plns, cmap = cmap, alpha = 0.3)
+
+        return graph_object
+
+
+    def __xIndexName(self):
+        return "x"
+
+    def __yIndexName(self):
+        return "y"
+
+    def __pollutionIndexName(self):
+        return "pollutions"
+
+
+
+
 
     def __Read(self, x, y, t):
 
