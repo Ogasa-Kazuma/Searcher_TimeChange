@@ -8,45 +8,104 @@ import copy
 import importlib
 from PointClass import Point
 
-class Pollution:
+class PollutionDataReader:
+    """ファイルから濃度値を取得するクラス"""
 
-    #コンストラクタに入れるものが実装詳細となるものが多い
+    #コンストラクタ
     def __init__(self, pollutionFileDirectory, format, fileReader):
         self.__pollutionFileDirectory = pollutionFileDirectory
         self.__format = format
         self.__fileReader = fileReader
 
 
-    def View(self, graph_object, time, cmap = 'binary', alpha = 0.3):
-        #フォーマットにカンマが含まれているかどうかをコンストラクタで確認
+#--------------- パブリックメソッド ----------------------------
+#
+# パブリックメソッドはクラス外からもアクセスできます
+#
+#-------------------------------------------------------------
+
+
+
+    def GetPollution(self, x, y, t):
+        """指定した座標および時間の濃度値を取得する"""
+        pollution = self.__Read(x, y, t)
+        return pollution
+
+
+
+    def View(self, graph_object, time, cmap = 'binary', alpha = 0.3, marker='o', norm=None, vmin=None, vmax=None, linewidths=None, verts=None, edgecolors=None, hold=None, data=None):
+        """指定した時間での濃度分布モデルを描画する"""
+
+        #濃度値ファイルの読み出し
         path = self.__pollutionFileDirectory + str(time)  + self.__format
         pollutionLog = self.__fileReader.Read(path)
+
+
+
+        #-------------- 変更しないでください ---------------
+        xlim = int(pollutionLog["x"][0])
+        ylim = int(pollutionLog["y"][0])
+        #---------------------------------------------
 
         new_x = list()
         new_y = list()
 
-        xlim = int(pollutionLog["x"][0])
-        ylim = int(pollutionLog["y"][0])
-
+        #表示できる形式に、座標データを変換
         for x_i in range(0, xlim, 1):
             for y_i in range(0, ylim, 1):
 
                 new_x.append(x_i)
                 new_y.append(y_i)
 
-
-
-
+        #表示できるように、濃度値データのデータ構造と値を調整
         plns = copy.deepcopy(pollutionLog["pollutions"])
         plns = plns.values.tolist()
         maxPln = max(plns)
         for i in range(len(plns)):
             plns[i] = plns[i] / maxPln
 
-        graph_object.scatter(new_x, new_y, c = plns, cmap = cmap, alpha = 0.3)
 
+        #散布図を描画
+        graph_object.scatter(new_x, new_y, c = plns, cmap = cmap, alpha = alpha, marker = marker, norm = norm,\
+                              vmin = vmin, vmax = vmax, linewidths = linewidths,\
+                              edgecolors = edgecolors, data = data)
+
+        #グラフオブジェクトを返却
         return graph_object
 
+
+    def StraightLine(self, point_start, point_last, time_start, speed):
+        """指定した2点間の座標、濃度値、かかる時間を計算し、まとめて返す"""
+
+        #2点間に存在する座標を計算
+        x, y = self.__CalcPointsOnLine(point_start, point_last)
+
+        #2点間座標を整数に変換したり、重複を排除する
+        x, y = self.__RoundPoints(x, y)
+        x, y = self.__DeleteDupl(x, y)
+        x, y = self.__ToInt(x, y)
+
+        #上記で計算した座標について、その地点にたどりつくまでの時間を各点について計算
+        t = self.__TimeList(point_start, x, y, time_start, speed)
+
+        #各点および時間での濃度値を計算
+        pollutions = self.__Pollutions(x, y, t)
+
+        #濃度値と座標を直線オブジェクトとして返却
+        pointsAndPollutions = self.__ConvertPointsAndPollutionsToOneList(x, y, t, pollutions)
+        return self.PollutionStraightLine(pointsAndPollutions)
+
+
+#-------------- パブリックメソッド -------------------------------------
+
+
+
+
+#-------------　プライベートメソッド ------------------------------------
+#
+# プライベートメソッドはクラス外からアクセスできません
+#
+#----------------------------------------------------------------------
 
     def __xIndexName(self):
         return "x"
@@ -56,6 +115,7 @@ class Pollution:
 
     def __pollutionIndexName(self):
         return "pollutions"
+
 
 
 
@@ -139,27 +199,6 @@ class Pollution:
 
 
 
-    def StraightLine(self, point_start, point_last, time_start, speed):
-
-
-        #2点間の角度計算
-        #x座標、y座標の集合をtimeにまとめたクラスにする？
-
-        #メソッドをクラスやメソッド内メソッドにまとめたほうがわかりやすい！
-        x, y = self.__CalcPointsOnLine(point_start, point_last)
-
-        x, y = self.__RoundPoints(x, y)
-        x, y = self.__DeleteDupl(x, y)
-        x, y = self.__ToInt(x, y)
-
-        t = self.__TimeList(point_start, x, y, time_start, speed)
-
-
-        pollutions = self.__Pollutions(x, y, t)
-
-        pointsAndPollutions = self.__ConvertPointsAndPollutionsToOneList(x, y, t, pollutions)
-
-        return self.PollutionStraightLine(pointsAndPollutions)
 
 
 
