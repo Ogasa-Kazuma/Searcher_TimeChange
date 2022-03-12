@@ -2,6 +2,7 @@
 import glob
 
 import pandas as pd
+import random
 import math
 import re
 import copy
@@ -30,6 +31,49 @@ class PollutionDataReader:
         """指定した座標および時間の濃度値を取得する"""
         pollution = self.__Read(x, y, t)
         return pollution
+
+    def IsInRange(self, point):
+
+        file = self.__pollutionFileDirectory + str(0) + self.__format
+        file = self.__fileReader.Read(file)
+
+
+        xlim = int(file['x'][0]) - 1
+        ylim = int(file['y'][0]) - 1
+
+
+        isUnderZero = point.IsUnderX(0) or point.IsUnderY(0)
+        isOverLimit = point.IsOverX(xlim) or point.IsOverY(ylim)
+
+        if(isUnderZero or isOverLimit):
+            return False
+
+
+        return True
+
+
+
+    def RandomPoint(self):
+
+        file = self.__OpenFile(time = 0)
+        xIndex = self.__xIndexName()
+        yIndex = self.__yIndexName()
+
+        xlim = file[xIndex][0] - 1
+        ylim = file[yIndex][0] - 1
+
+
+        while(1):
+
+
+            x_random = random.randint(-xlim, xlim + 1)
+            y_random = random.randint(-ylim, ylim + 1)
+
+            point_random = Point(x_random, y_random)
+            if(self.IsInRange(point_random)):
+                return point_random
+
+
 
 
 
@@ -85,14 +129,17 @@ class PollutionDataReader:
         x, y = self.__DeleteDupl(x, y)
         x, y = self.__ToInt(x, y)
 
+
         #上記で計算した座標について、その地点にたどりつくまでの時間を各点について計算
         t = self.__TimeList(point_start, x, y, time_start, speed)
 
         #各点および時間での濃度値を計算
         pollutions = self.__Pollutions(x, y, t)
 
+
         #濃度値と座標を直線オブジェクトとして返却
         pointsAndPollutions = self.__ConvertPointsAndPollutionsToOneList(x, y, t, pollutions)
+        print(pointsAndPollutions)
         return self.PollutionStraightLine(pointsAndPollutions)
 
 
@@ -157,6 +204,12 @@ class PollutionDataReader:
     def __RoundDown(self, value):
         value = math.floor(value)
         return value
+
+
+    def __OpenFile(self, time):
+        fileLocation = self.__pollutionFileDirectory + str(time) + self.__format
+        file = self.__fileReader.Read(fileLocation)
+        return file
 
 
     def __SpecifyFile(self, t):
@@ -296,6 +349,7 @@ class PollutionDataReader:
 ################################################################
     class PollutionStraightLine:
 
+
         def __init__(self, pointsAndPollutions):
             self.__pointAndPollutions = pointsAndPollutions
             self.__counter = 0
@@ -305,9 +359,29 @@ class PollutionDataReader:
 
         def Next(self):
 
-            if(self.__counter > len(self.__pointAndPollutions)):
+            if(self.__counter >= len(self.__pointAndPollutions)):
                 self.__counter = 0
                 return []
 
+
+            x = self.__pointAndPollutions[self.__counter][0]
+            y = self.__pointAndPollutions[self.__counter][1]
+            t = self.__pointAndPollutions[self.__counter][2]
+            pollution = self.__pointAndPollutions[self.__counter][3]
+
             self.__counter += 1
+
+            return Point(x, y), t, pollution
+
+        def HasNext(self):
+            hasNext = (not (self.__counter >= len(self.__pointAndPollutions)))
+            return hasNext
+
+
+
+
+        def __PointAndPollutions(self):
             return self.__pointAndPollutions
+
+        def __DataLength(self):
+            return len(self.__PointAndPollutions())

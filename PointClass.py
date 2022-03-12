@@ -16,6 +16,17 @@ class Point:
         return self.__y
 
 
+    def Add(self, point):
+        if(not type(point) == Point):
+            raise TypeError("座標クラス以外とは距離を計算できません")
+
+        result_x = self.GetX() + point.GetX()
+        result_y = self.GetY() + point.GetY()
+
+        self.__x = result_x
+        self.__y = result_y
+
+
 
     def distance(self, point):
         if(not type(point) == Point):
@@ -56,3 +67,39 @@ class Point:
         time = distance / speed
 
         return time
+
+
+    def IsOverX(self, x):
+        x_self = self.GetX()
+        if(x_self > x):
+            return True
+
+        return False
+
+    def IsOverY(self, y):
+        y_self = self.GetY()
+        if(y_self > y):
+            return True
+
+        return False
+
+
+    def IsUnderX(self, x):
+        x_self = self.GetX()
+        if(x_self < x):
+            return True
+
+        return False
+
+    def IsUnderY(self, y):
+        y_self = self.GetY()
+        if(y_self < y):
+            return True
+
+        return False
+
+
+
+    def Print(self):
+        print("x " + str(self.GetX()))
+        print("y " + str(self.GetY()))
